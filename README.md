@@ -6,7 +6,8 @@
 
 A TypeScript library for integrating the **Semaphore SMS API** into Node.js applications. Built around **strict types**, **native fetch**, and an **injectable transport**, with a modular architecture for message operations, response validation, and reliable error handling.
 
-[![Version](https://img.shields.io/badge/sdkversion-0.1.0-yellow?style=flat-square)](#development-status)
+[![npm version](https://img.shields.io/npm/v/semaphore-sdk?style=flat-square)](https://www.npmjs.com/package/semaphore-sdk)
+[![GitHub release](https://img.shields.io/github/v/release/pravennn08/semaphore-sdk?style=flat-square)](https://github.com/pravennn08/semaphore-sdk/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io/)
@@ -17,7 +18,7 @@ A TypeScript library for integrating the **Semaphore SMS API** into Node.js appl
 [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](./LICENSE)
 
-[Overview](#overview) · [Project Goals](#project-goals) · [Tech Stack](#technology-stack) · [Environment](#environment) · [Architecture](#architecture) · [Build & Test](#build--test) · [Workflow](#workflow) · [Safety & Compliance](#safety-and-compliance) · [Troubleshooting](#troubleshooting)
+[Overview](#overview) · [Installation](#installation) · [Quick Start](#quick-start) · [Project Goals](#project-goals) · [Tech Stack](#technology-stack) · [Environment](#environment) · [Architecture](#architecture) · [Build & Test](#build--test) · [Workflow](#workflow) · [Safety & Compliance](#safety-and-compliance) · [Troubleshooting](#troubleshooting)
 
 </div>
 
@@ -43,23 +44,87 @@ The SDK is designed to:
 - Keep sensitive information out of default diagnostic output.
 - Publish an explicit **ESM entry point** with TypeScript declarations.
 
-The current implementation includes the **messages** and **OTP** resources. Account and message-retrieval resources can be added later using the same architectural boundaries.
+The current implementation includes the **messages**, **priority**, and **OTP** resources. Account and message-retrieval resources can be added later using the same architectural boundaries.
 
 ### Development Status
 
-**Current version: `0.1.0`**
+**Current version: `0.2.0`**
 
-The first vertical slice is implemented and tested: client configuration, shared request handling, ordinary SMS message submission, and dedicated OTP submission. Priority, account, and message-retrieval resources are not implemented yet.
+The first vertical slice is implemented and tested: client configuration, shared request handling, ordinary SMS and priority message submission, and dedicated OTP submission. Account and message-retrieval resources are planned next.
 
 - Initial module format: **ESM only**
 - Library build: **TypeScript compiler (`tsc`)**
-- Implemented resources: **Messages and OTP**
-- Future resource candidates: **Priority, account, and message retrieval**
+- Implemented resources: **Messages, Priority, and OTP**
+- Future resource candidates: **Account and message retrieval**
 - Supported runtime: Node.js with native `fetch` (the development toolchain is tested with Node.js 22)
 - Public API names and package publication details: still subject to change before `1.0.0`
 
 > [!NOTE]
 > This is an independent SDK project. It is not presented as an official Semaphore-maintained package.
+
+---
+
+## Installation
+
+Install the published package with npm or pnpm:
+
+```bash
+npm install semaphore-sdk
+# or
+pnpm add semaphore-sdk
+```
+
+The SDK is ESM-only and requires Node.js `>=18.17.0`. It uses the runtime's
+native `fetch` implementation and does not load `.env` files automatically; load
+environment variables in your application and pass the API key to the client.
+
+## Quick start
+
+### Send a standard SMS
+
+```ts
+import { SemaphoreClient } from "semaphore-sdk";
+
+const client = new SemaphoreClient({
+  apiKey: process.env.SEMAPHORE_API_KEY!,
+  defaultSender: process.env.SEMAPHORE_SENDER_NAME,
+});
+
+const result = await client.messages.send({
+  to: "+639171234567",
+  message: "Your verification code is 123456.",
+});
+
+console.log(result.data[0]?.messageId);
+```
+
+### Send a priority SMS
+
+Priority messages use the same input and output contract as standard SMS while
+using Semaphore's priority queue:
+
+```ts
+const result = await client.priority.send({
+  to: "09171234567",
+  message: "Your order is ready for pickup.",
+});
+
+console.log(result.data[0]?.status);
+```
+
+### Send an OTP
+
+```ts
+const result = await client.otp.send({
+  to: "09171234567",
+  message: "Your login code is {otp}.",
+});
+
+console.log(result.data[0]?.code);
+```
+
+Keep API keys server-side and treat timeouts, cancellations, and transport
+failures as uncertain submission outcomes before deciding whether to send again.
 
 ---
 
@@ -179,9 +244,13 @@ flowchart TD
 
     CONFIG[Validated configuration] --> CLIENT
     CLIENT --> RESOURCE[Messages resource]
+    CLIENT --> PRIORITY[Priority resource]
+    CLIENT --> OTP[OTP resource]
     CLIENT --> REQUEST[Shared request executor]
 
     RESOURCE --> INPUT[Input validation]
+    PRIORITY --> INPUT
+    OTP --> INPUT
     INPUT --> REQUEST
 
     REQUEST --> TRANSPORT[Injectable transport]
@@ -210,6 +279,10 @@ The source tree reflects the current implementation.
 ```text
 semaphore-sdk/
 ├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.yml
+│   │   ├── config.yml
+│   │   └── feature_request.yml
 │   └── workflows/
 │       └── ci.yml
 │
@@ -231,11 +304,14 @@ semaphore-sdk/
 │       │   ├── types.ts
 │       │   ├── schema.ts
 │       │   └── mapper.ts
-│       └── otp/
+│       ├── otp/
+│       │   ├── resource.ts
+│       │   ├── types.ts
+│       │   ├── schema.ts
+│       │   └── mapper.ts
+│       └── priority/
 │           ├── resource.ts
-│           ├── types.ts
-│           ├── schema.ts
-│           └── mapper.ts
+│           └── types.ts
 │
 ├── test/
 │   ├── unit/
@@ -294,6 +370,14 @@ The OTP resource uses the provider's dedicated `/otp` route and exposes
 optional custom numeric code. If no code is supplied, the provider generates
 one and returns it in the mapped `code` field. Shared recipient, message, and
 sender validation lives in `resource/validation.ts`.
+
+### Priority Resource
+
+The priority resource uses Semaphore's `/priority` route and exposes
+`client.priority.send()`. It shares the standard SMS input, validation, response
+mapping, timeout, cancellation, and error behavior. See the [Semaphore API
+documentation](https://www.semaphore.co/docs) for provider-side queue and
+credit details.
 
 ### Shared Request Core
 
@@ -402,7 +486,7 @@ Illustrative package metadata, assuming output is emitted to `dist/`:
 ```json
 {
   "name": "semaphore-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "files": ["dist"],
   "types": "./dist/index.d.ts",
@@ -499,7 +583,8 @@ Default CI must not require live API credentials or send real messages.
 4. **Complete** — `client.messages.send()` input validation, Philippine mobile-number normalization, request serialization, and response mapping.
 5. **Complete** — package-consumer verification for built JavaScript and declarations, plus the initial CI workflow.
 6. **Complete** — `client.otp.send()` with custom-code validation and provider-code response mapping.
-7. **Next** — add priority, account, and message-retrieval resources only after their provider contracts are verified.
+7. **Complete** — `client.priority.send()` reuses the validated SMS request and response contract with the provider's priority endpoint.
+8. **Next** — add account and message-retrieval resources only after their provider contracts are verified.
 
 ### Future Resources
 
