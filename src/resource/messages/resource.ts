@@ -6,6 +6,7 @@ import type { MessagesResource, SendSmsInput } from "./types.js";
 export function createMessagesResource(
   request: RequestExecutor,
   defaultSender: string | undefined,
+  path = "messages",
 ): MessagesResource {
   return {
     async send(input: SendSmsInput, options?: RequestOptions) {
@@ -21,7 +22,7 @@ export function createMessagesResource(
 
       return request(
         {
-          path: "messages",
+          path,
           form,
           parse: (payload) => mapMessages(parseWireMessages(payload)),
         },

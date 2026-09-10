@@ -51,3 +51,15 @@ their decimal representation.
 The provider response must contain a code. It is returned as the normalized
 string `data[0].code` alongside the ordinary message fields. A missing or
 malformed code is an `invalid_response` with an uncertain submission state.
+
+## Priority sends
+
+`client.priority.send({ to, message, senderName })` uses the provider's
+`POST /api/v4/priority` route. It accepts the same recipient forms, message
+validation, sender override, response mapping, timeout, cancellation, and error
+classification as `client.messages.send()`.
+
+Priority requests are still SMS submissions: the SDK does not retry them, and a
+timeout or transport failure must be treated as an uncertain outcome. Provider
+queue priority, rate limits, and credit costs are documented by
+[Semaphore](https://www.semaphore.co/docs).

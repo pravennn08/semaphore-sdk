@@ -23,3 +23,7 @@ export type {
   SendOtpInput,
   SemaphoreOtp,
 } from "./resource/otp/types.js";
+export type {
+  PriorityResource,
+  SendPriorityInput,
+} from "./resource/priority/types.js";

@@ -1,10 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const packageVersion = JSON.parse(
+  readFileSync(join(projectRoot, "package.json"), "utf8"),
+).version;
 const fixtureDirectory = mkdtempSync(join(tmpdir(), "semaphore-sdk-consumer-"));
 const packageManager = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const typeScript = join(
@@ -31,7 +34,7 @@ try {
     projectRoot,
   );
 
-  const tarball = join(fixtureDirectory, "semaphore-sdk-0.1.0.tgz");
+  const tarball = join(fixtureDirectory, `semaphore-sdk-${packageVersion}.tgz`);
   writeFileSync(
     join(fixtureDirectory, "package.json"),
     `${JSON.stringify(
@@ -82,8 +85,10 @@ if (result.data[0]?.messageId !== "consumer-test-id") {
     `import { SemaphoreClient } from "semaphore-sdk";
 import type {
   HttpTransport,
+  PriorityResource,
   SemaphoreMessage,
   SemaphoreOtp,
+  SendPriorityInput,
   SendOtpInput,
 } from "semaphore-sdk";
 
@@ -101,8 +106,17 @@ const otpInput: SendOtpInput = {
 };
 const otp = client.otp.send(otpInput);
 const otpMessages: Promise<Readonly<{ data: SemaphoreOtp[] }>> = otp;
+const priorityInput: SendPriorityInput = {
+  to: "639171234567",
+  message: "Priority type test",
+};
+const priority: Promise<Readonly<{ data: SemaphoreMessage[] }>> =
+  client.priority.send(priorityInput);
+const priorityResource: PriorityResource = client.priority;
 void messages;
 void otpMessages;
+void priority;
+void priorityResource;
 `,
   );
   writeFileSync(

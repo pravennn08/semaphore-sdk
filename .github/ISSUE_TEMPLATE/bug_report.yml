@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a reproducible problem with the SDK.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Never include API keys, phone numbers, OTPs, or message bodies in an issue.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+      placeholder: Describe the problem and the operation that triggered it.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest example that reproduces the problem. Use a fake transport and sanitized values.
+      render: typescript
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect the SDK to do?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What did the SDK do instead? Include the error kind and message when available.
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Node.js and package versions
+      placeholder: Node 22.x, semaphore-sdk 0.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Remove credentials and personal data before sharing logs.
+      render: shell

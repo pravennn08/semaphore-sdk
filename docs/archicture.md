@@ -16,11 +16,14 @@ src/
 │   │   ├── schema.ts                 input and provider-shape validation
 │   │   ├── mapper.ts                 provider records to public models
 │   │   └── resource.ts               messages.send operation
-│   └── otp/
-│       ├── types.ts                  public OTP contracts
-│       ├── schema.ts                 OTP input and response validation
-│       ├── mapper.ts                 provider records to public models
-│       └── resource.ts               otp.send operation
+│   ├── otp/
+│   │   ├── types.ts                  public OTP contracts
+│   │   ├── schema.ts                 OTP input and response validation
+│   │   ├── mapper.ts                 provider records to public models
+│   │   └── resource.ts               otp.send operation
+│   └── priority/
+│       ├── types.ts                  public priority message contracts
+│       └── resource.ts               priority.send operation
 ├── core/
 │   ├── request.ts                   auth, form encoding, timeout, cancellation,
 │   │                                response parsing, and error translation
@@ -39,6 +42,8 @@ while timeouts, cancellations, provider rejections, malformed responses, and
 unknown statuses remain observable through stable error and result fields.
 
 The current vertical slice implements client configuration,
-`client.messages.send`, and `client.otp.send`. New resources should add their
-own `types.ts`, `schema.ts`, `mapper.ts`, and `resource.ts`, then reuse the
-request executor instead of duplicating authentication or retry behavior.
+`client.messages.send`, `client.priority.send`, and `client.otp.send`. Priority
+messages reuse the standard message schema and mapper because the provider uses
+the same request and response contract. New resources should add their own
+public types and endpoint resource, then reuse the request executor instead of
+duplicating authentication or retry behavior.
