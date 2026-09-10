@@ -1,0 +1,62 @@
+{
+  "name": "semaphore-sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for the Semaphore Philippines SMS API.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:package": "pnpm build && node test/package/consumer.mjs",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "keywords": [
+    "semaphore",
+    "sms",
+    "sms-api",
+    "philippines",
+    "typescript",
+    "nodejs",
+    "otp"
+  ],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.3.4",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.3.4",
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "^22.20.1",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.12.0",
+    "prettier": "3.9.6",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "8.70.0",
+    "vitest": "5.0.0"
+  }
+}
