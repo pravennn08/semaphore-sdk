@@ -324,6 +324,10 @@ semaphore-sdk/
 │   └── api-behavior.md
 │
 ├── examples/
+│   ├── README.md
+│   ├── send-message.ts
+│   ├── send-priority.ts
+│   └── send-otp.ts
 │
 ├── package.json
 ├── pnpm-lock.yaml
