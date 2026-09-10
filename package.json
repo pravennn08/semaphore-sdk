@@ -35,8 +35,16 @@
     "nodejs",
     "otp"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Raven C. Magbanua",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pravennn08/semaphore-sdk.git"
+  },
+  "homepage": "https://github.com/pravennn08/semaphore-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/pravennn08/semaphore-sdk/issues"
+  },
   "engines": {
     "node": ">=18.17.0"
   },
