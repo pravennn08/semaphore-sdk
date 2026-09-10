@@ -15,6 +15,7 @@ A TypeScript library for integrating the **Semaphore SMS API** into Node.js appl
 [![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=flat-square&logo=eslint&logoColor=white)](https://eslint.org/)
 [![Prettier](https://img.shields.io/badge/Prettier-F7B93E?style=flat-square&logo=prettier&logoColor=black)](https://prettier.io/)
 [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](./LICENSE)
 
 [Overview](#overview) · [Project Goals](#project-goals) · [Tech Stack](#technology-stack) · [Environment](#environment) · [Architecture](#architecture) · [Build & Test](#build--test) · [Workflow](#workflow) · [Safety & Compliance](#safety-and-compliance) · [Troubleshooting](#troubleshooting)
 
@@ -339,10 +340,8 @@ A malformed response after dispatch may also represent an uncertain submission. 
 
 ### 1. Clone the Repository
 
-Replace the placeholder with your repository URL:
-
 ```bash
-git clone https://github.com/your-username/semaphore-sdk.git
+git clone https://github.com/pravennn08/semaphore-sdk.git
 cd semaphore-sdk
 ```
 
@@ -416,7 +415,8 @@ Illustrative package metadata, assuming output is emitted to `dist/`:
 }
 ```
 
-The package name is provisional; this example does not imply npm availability or ownership.
+The package is currently in pre-1.0 development; check the repository releases
+for the version and compatibility guarantees of each published package.
 
 ### 6. Verify the Packed Artifact
 
