@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: false,
-    include: ["test/**/*.{test,spec}.ts"],
+    include: ["test/**/*.{test,spec}.{ts,js}"],
     clearMocks: true,
     restoreMocks: true,
   },

@@ -1,4 +1,5 @@
 import { SemaphoreValidationError } from "../../errors.js";
+import { validatePagination } from "../pagination.js";
 import {
   normalizeRecipients,
   validateMessageBody,
@@ -33,23 +34,6 @@ export interface ValidatedListMessagesInput {
   readonly query: Record<string, string>;
 }
 
-function validatePositiveInteger(
-  name: string,
-  value: number | undefined,
-  maximum?: number,
-): void {
-  if (
-    value !== undefined &&
-    (!Number.isSafeInteger(value) ||
-      value < 1 ||
-      (maximum !== undefined && value > maximum))
-  ) {
-    const range =
-      maximum === undefined ? "at least 1" : `between 1 and ${maximum}`;
-    throw new SemaphoreValidationError(`${name} must be an integer ${range}.`);
-  }
-}
-
 function validateDate(name: string, value: string | undefined): void {
   if (value === undefined) {
     return;
@@ -80,8 +64,7 @@ export function validateListMessagesInput(
     throw new SemaphoreValidationError("list input must be an object.");
   }
 
-  validatePositiveInteger("limit", input.limit, 1_000);
-  validatePositiveInteger("page", input.page);
+  const query = validatePagination(input);
   validateDate("startDate", input.startDate);
   validateDate("endDate", input.endDate);
 
@@ -93,13 +76,6 @@ export function validateListMessagesInput(
     throw new SemaphoreValidationError("startDate cannot be after endDate.");
   }
 
-  const query: Record<string, string> = {};
-  if (input.limit !== undefined) {
-    query.limit = String(input.limit);
-  }
-  if (input.page !== undefined) {
-    query.page = String(input.page);
-  }
   if (input.startDate !== undefined) {
     query.startDate = input.startDate;
   }

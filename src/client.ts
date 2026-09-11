@@ -1,5 +1,7 @@
 import { resolveClientConfig, type SemaphoreClientOptions } from "./config.js";
 import { createRequestExecutor } from "./core/request.js";
+import { createAccountResource } from "./resource/account/resource.js";
+import type { AccountResource } from "./resource/account/types.js";
 import { createMessagesResource } from "./resource/messages/resource.js";
 import type { MessagesResource } from "./resource/messages/types.js";
 import { createOtpResource } from "./resource/otp/resource.js";
@@ -8,6 +10,7 @@ import { createPriorityResource } from "./resource/priority/resource.js";
 import type { PriorityResource } from "./resource/priority/types.js";
 
 export class SemaphoreClient {
+  readonly account: AccountResource;
   readonly messages: MessagesResource;
   readonly otp: OtpResource;
   readonly priority: PriorityResource;
@@ -15,6 +18,7 @@ export class SemaphoreClient {
   constructor(options: SemaphoreClientOptions) {
     const config = resolveClientConfig(options);
     const request = createRequestExecutor(config);
+    this.account = createAccountResource(request);
     this.messages = createMessagesResource(request, config.defaultSender);
     this.otp = createOtpResource(request, config.defaultSender);
     this.priority = createPriorityResource(request, config.defaultSender);

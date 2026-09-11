@@ -10,6 +10,7 @@ response validation, injectable transports, and stable error classifications.
 
 [![npm version](https://img.shields.io/npm/v/semaphore-sdk?style=flat-square)](https://www.npmjs.com/package/semaphore-sdk)
 [![GitHub release](https://img.shields.io/github/v/release/pravennn08/semaphore-sdk?style=flat-square)](https://github.com/pravennn08/semaphore-sdk/releases)
+[![Socket Badge](https://badge.socket.dev/npm/package/semaphore-sdk)](https://socket.dev/npm/package/semaphore-sdk)
 [![CI](https://github.com/pravennn08/semaphore-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/pravennn08/semaphore-sdk/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
@@ -31,8 +32,10 @@ Philippines SMS API. It keeps provider-specific HTTP details inside resources
 while exposing a small public client:
 
 - `client.messages.send()` for standard and bulk SMS
+- `client.messages.list()` and `client.messages.get()` for message retrieval
 - `client.priority.send()` for priority SMS
 - `client.otp.send()` for dedicated OTP traffic
+- `client.account` for account details, transactions, sender names, and users
 
 The package requires Node.js `>=18.17.0` and uses the runtime's native `fetch`.
 It does not load `.env` files automatically; load secrets in your application
@@ -113,24 +116,51 @@ const result = await client.otp.send({
 console.log(result.data[0]?.code);
 ```
 
+### Read account information
+
+```ts
+const account = await client.account.get();
+console.log(account.data.accountName);
+console.log(account.data.status);
+console.log(account.data.creditBalance);
+```
+
+Account list methods accept `{ page, limit }` and return one page per call.
+Transactions preserve provider fields as `Readonly<Record<string, unknown>>`
+because the provider's transaction response schema is unclear; narrow fields
+before using them. See [account API behavior](./docs/api-behavior.md#account-reads)
+for the response contracts and rate-limit guidance.
+
 ## Supported APIs
 
-| Resource | Method                   | Behavior                                                                 |
-| -------- | ------------------------ | ------------------------------------------------------------------------ |
-| Messages | `client.messages.send()` | Sends one message to one or up to 1,000 Philippine mobile numbers.       |
-| Messages | `client.messages.list()` | Retrieves outgoing messages with pagination and optional filters.        |
-| Messages | `client.messages.get()`  | Retrieves one outgoing message by its provider ID.                       |
-| Priority | `client.priority.send()` | Sends through Semaphore's priority queue with the standard SMS contract. |
-| OTP      | `client.otp.send()`      | Sends through the dedicated OTP route and returns the provider code.     |
+| Resource | Method                               | Behavior                                                                     |
+| -------- | ------------------------------------ | ---------------------------------------------------------------------------- |
+| Messages | `client.messages.send()`             | Sends one message to one or up to 1,000 Philippine mobile numbers.           |
+| Messages | `client.messages.list()`             | Retrieves outgoing messages with pagination and optional filters.            |
+| Messages | `client.messages.get()`              | Retrieves one outgoing message by its provider ID.                           |
+| Priority | `client.priority.send()`             | Sends through Semaphore's priority queue with the standard SMS contract.     |
+| OTP      | `client.otp.send()`                  | Sends through the dedicated OTP route and returns the provider code.         |
+| Account  | `client.account.get()`               | Reads account ID, name, status, and credit balance.                          |
+| Account  | `client.account.transactions.list()` | Reads one page of credit transaction records with provider fields preserved. |
+| Account  | `client.account.senderNames.list()`  | Reads registered sender names and their statuses.                            |
+| Account  | `client.account.users.list()`        | Reads users associated with the account.                                     |
 
 Recipients in `09...`, `9...`, `639...`, and `+639...` forms are normalized to
 the provider's `639...` format. Duplicate recipients are preserved. Blank or
 `TEST`-prefixed messages, invalid recipients, and blank sender names are rejected
 before a network request is made.
 
-Account APIs are planned for a later release after their pagination and response
-contracts are finalized. Message retrieval is limited to 30 requests per minute
-by the provider.
+Message retrieval is limited to 30 requests per minute. The provider documents
+2 requests per minute for each account endpoint, but live sender-name and user
+responses have reported `X-RateLimit-Limit: 1`. Use the actual `meta.rateLimit`
+headers rather than assuming the documented quota. Account methods make a single
+request with no automatic pagination, polling, or retries. Cache account data
+in your application and respect `Retry-After` when a request is rate limited.
+Sender-name and user methods are read-only; they do not register senders or
+change account membership.
+
+Sender `createdAt` and user `status` are `null` when the provider omits those
+fields or returns null. A missing status is not interpreted as active or inactive.
 
 See the [Semaphore API documentation](https://www.semaphore.co/docs) for the
 provider's endpoint parameters, limits, and account requirements.
@@ -159,7 +189,8 @@ Keep API keys server-side. Do not place them in browser bundles or public
 ## Errors and submission safety
 
 Successful operations return `{ data, meta }`. `data` contains normalized public
-records, while `meta` includes the HTTP status and available rate-limit headers.
+records (except transactions, which retain provider fields), while `meta`
+includes the HTTP status and available rate-limit headers.
 
 The SDK exposes `SemaphoreValidationError` for invalid input and
 `SemaphoreApiError` for provider, transport, timeout, cancellation, and response
@@ -195,8 +226,9 @@ pnpm test:package
 ```
 
 Tests use injectable fake transports and do not require live API credentials or
-send real SMS. The [examples](./examples/README.md) are opt-in live integrations
-guarded by `SEMAPHORE_ALLOW_LIVE_SMS=true`.
+send real SMS. The [SMS examples](./examples/README.md) are opt-in live integrations
+guarded by `SEMAPHORE_ALLOW_LIVE_SMS=true`. The account example only reads data
+and selects one endpoint per run.
 
 ## Documentation and project links
 
