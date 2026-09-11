@@ -26,7 +26,9 @@ export interface ApiResponse<T> {
 
 export interface RequestOperation<T> {
   readonly path: string;
-  readonly form: Readonly<Record<string, string>>;
+  readonly method?: "GET" | "POST";
+  readonly query?: Readonly<Record<string, string>>;
+  readonly form?: Readonly<Record<string, string>>;
   readonly parse: (payload: unknown) => T;
 }
 
@@ -154,27 +156,44 @@ export function createRequestExecutor(
         throw abortError("cancelled", "not_sent");
       }
 
-      const form = new URLSearchParams();
-      for (const [key, value] of Object.entries(operation.form)) {
+      const method = operation.method ?? "POST";
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(operation.query ?? {})) {
         if (key !== "apikey") {
-          form.set(key, value);
+          query.set(key, value);
         }
       }
-      form.set("apikey", config.apiKey);
+      const requestUrl = `${API_BASE_URL}/${operation.path}`;
+      const requestInit: RequestInit = {
+        method,
+        headers: {
+          accept: "application/json",
+        },
+        redirect: "error",
+        signal: controller.signal,
+      };
+
+      if (method === "GET") {
+        query.set("apikey", config.apiKey);
+      } else {
+        const form = new URLSearchParams();
+        for (const [key, value] of Object.entries(operation.form ?? {})) {
+          if (key !== "apikey") {
+            form.set(key, value);
+          }
+        }
+        form.set("apikey", config.apiKey);
+        requestInit.headers = {
+          accept: "application/json",
+          "content-type": "application/x-www-form-urlencoded",
+        };
+        requestInit.body = form;
+      }
 
       const operationPromise = (async () => {
         const response = await config.transport(
-          `${API_BASE_URL}/${operation.path}`,
-          {
-            method: "POST",
-            headers: {
-              accept: "application/json",
-              "content-type": "application/x-www-form-urlencoded",
-            },
-            body: form,
-            redirect: "error",
-            signal: controller.signal,
-          },
+          query.size > 0 ? `${requestUrl}?${query}` : requestUrl,
+          requestInit,
         );
         const rawBody = await response.text();
         return { response, rawBody };

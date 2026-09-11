@@ -7,6 +7,7 @@ function publicStatus(rawStatus: string): SemaphoreMessageStatus {
     normalized === "queued" ||
     normalized === "pending" ||
     normalized === "sent" ||
+    normalized === "success" ||
     normalized === "failed" ||
     normalized === "refunded"
   ) {
