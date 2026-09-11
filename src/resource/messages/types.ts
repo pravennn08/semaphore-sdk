@@ -5,7 +5,7 @@ import type {
 } from "../../core/request.js";
 
 export type SemaphoreMessageStatus =
-  "queued" | "pending" | "sent" | "failed" | "refunded" | "unknown";
+  "queued" | "pending" | "sent" | "success" | "failed" | "refunded" | "unknown";
 
 export interface SemaphoreMessage {
   readonly messageId: string;
@@ -21,11 +21,28 @@ export interface SendSmsInput {
   readonly senderName?: string;
 }
 
+export interface ListMessagesInput {
+  readonly limit?: number;
+  readonly page?: number;
+  readonly startDate?: string;
+  readonly endDate?: string;
+  readonly network?: string;
+  readonly status?: string;
+}
+
 export interface MessagesResource {
   send(
     input: SendSmsInput,
     options?: RequestOptions,
   ): Promise<ApiResponse<SemaphoreMessage[]>>;
+  list(
+    input?: ListMessagesInput,
+    options?: RequestOptions,
+  ): Promise<ApiResponse<SemaphoreMessage[]>>;
+  get(
+    messageId: string | number,
+    options?: RequestOptions,
+  ): Promise<ApiResponse<SemaphoreMessage>>;
 }
 
 export type MessagesRequestExecutor = RequestExecutor;

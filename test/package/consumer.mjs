@@ -13,8 +13,9 @@ const packageManager = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const typeScript = join(
   projectRoot,
   "node_modules",
-  ".bin",
-  process.platform === "win32" ? "tsc.cmd" : "tsc",
+  "typescript",
+  "bin",
+  "tsc",
 );
 
 function run(command, args, cwd) {
@@ -78,6 +79,16 @@ const result = await client.messages.send({
 if (result.data[0]?.messageId !== "consumer-test-id") {
   throw new Error("The packed SDK returned an unexpected message id.");
 }
+
+const listed = await client.messages.list({ page: 1, limit: 1 });
+if (listed.data[0]?.messageId !== "consumer-test-id") {
+  throw new Error("The packed SDK returned an unexpected list result.");
+}
+
+const retrieved = await client.messages.get("consumer-test-id");
+if (retrieved.data.messageId !== "consumer-test-id") {
+  throw new Error("The packed SDK returned an unexpected retrieval result.");
+}
 `,
   );
   writeFileSync(
@@ -85,6 +96,7 @@ if (result.data[0]?.messageId !== "consumer-test-id") {
     `import { SemaphoreClient } from "semaphore-sdk";
 import type {
   HttpTransport,
+  ListMessagesInput,
   PriorityResource,
   SemaphoreMessage,
   SemaphoreOtp,
@@ -113,10 +125,21 @@ const priorityInput: SendPriorityInput = {
 const priority: Promise<Readonly<{ data: SemaphoreMessage[] }>> =
   client.priority.send(priorityInput);
 const priorityResource: PriorityResource = client.priority;
+const retrievalInput: ListMessagesInput = {
+  page: 1,
+  limit: 10,
+  status: "success",
+};
+const listedMessages: Promise<Readonly<{ data: SemaphoreMessage[] }>> =
+  client.messages.list(retrievalInput);
+const retrievedMessage: Promise<Readonly<{ data: SemaphoreMessage }>> =
+  client.messages.get("message-id");
 void messages;
 void otpMessages;
 void priority;
 void priorityResource;
+void listedMessages;
+void retrievedMessage;
 `,
   );
   writeFileSync(
@@ -140,13 +163,13 @@ void priorityResource;
 
   run(
     packageManager,
-    ["install", "--ignore-scripts", "--lockfile=false"],
+    ["install", "--ignore-scripts", "--lockfile=false", "--force"],
     fixtureDirectory,
   );
   run(process.execPath, ["index.mjs"], fixtureDirectory);
   run(
-    typeScript,
-    ["--project", "tsconfig.json", "--pretty", "false"],
+    process.execPath,
+    [typeScript, "--project", "tsconfig.json", "--pretty", "false"],
     fixtureDirectory,
   );
   console.log("Package consumer verification passed.");

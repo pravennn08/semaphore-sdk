@@ -71,6 +71,21 @@ const result = await client.messages.send({
 console.log(result.data[0]?.messageId);
 ```
 
+### Retrieve messages
+
+List outgoing messages with pagination and filters, or retrieve one message by
+its provider ID:
+
+```ts
+const messages = await client.messages.list({
+  page: 1,
+  limit: 100,
+  status: "success",
+});
+
+const message = await client.messages.get("message-id");
+```
+
 ### Send a priority SMS
 
 Priority SMS uses the same input and output contract as standard SMS:
@@ -103,6 +118,8 @@ console.log(result.data[0]?.code);
 | Resource | Method                   | Behavior                                                                 |
 | -------- | ------------------------ | ------------------------------------------------------------------------ |
 | Messages | `client.messages.send()` | Sends one message to one or up to 1,000 Philippine mobile numbers.       |
+| Messages | `client.messages.list()` | Retrieves outgoing messages with pagination and optional filters.        |
+| Messages | `client.messages.get()`  | Retrieves one outgoing message by its provider ID.                       |
 | Priority | `client.priority.send()` | Sends through Semaphore's priority queue with the standard SMS contract. |
 | OTP      | `client.otp.send()`      | Sends through the dedicated OTP route and returns the provider code.     |
 
@@ -111,8 +128,9 @@ the provider's `639...` format. Duplicate recipients are preserved. Blank or
 `TEST`-prefixed messages, invalid recipients, and blank sender names are rejected
 before a network request is made.
 
-Message retrieval and account APIs are planned for a later release after their
-pagination, filtering, and response contracts are finalized.
+Account APIs are planned for a later release after their pagination and response
+contracts are finalized. Message retrieval is limited to 30 requests per minute
+by the provider.
 
 See the [Semaphore API documentation](https://www.semaphore.co/docs) for the
 provider's endpoint parameters, limits, and account requirements.

@@ -1,7 +1,17 @@
 import type { RequestExecutor, RequestOptions } from "../../core/request.js";
 import { mapMessages } from "./mapper.js";
-import { parseWireMessages, validateSendInput } from "./schema.js";
-import type { MessagesResource, SendSmsInput } from "./types.js";
+import {
+  parseWireMessage,
+  parseWireMessages,
+  validateListMessagesInput,
+  validateMessageId,
+  validateSendInput,
+} from "./schema.js";
+import type {
+  ListMessagesInput,
+  MessagesResource,
+  SendSmsInput,
+} from "./types.js";
 
 export function createMessagesResource(
   request: RequestExecutor,
@@ -25,6 +35,30 @@ export function createMessagesResource(
           path,
           form,
           parse: (payload) => mapMessages(parseWireMessages(payload)),
+        },
+        options,
+      );
+    },
+    async list(input?: ListMessagesInput, options?: RequestOptions) {
+      const validated = validateListMessagesInput(input);
+      return request(
+        {
+          method: "GET",
+          path: "messages",
+          query: validated.query,
+          parse: (payload) =>
+            mapMessages(parseWireMessages(payload, { allowEmpty: true })),
+        },
+        options,
+      );
+    },
+    async get(messageId: string | number, options?: RequestOptions) {
+      const validatedMessageId = validateMessageId(messageId);
+      return request(
+        {
+          method: "GET",
+          path: `messages/${encodeURIComponent(validatedMessageId)}`,
+          parse: (payload) => mapMessages([parseWireMessage(payload)])[0],
         },
         options,
       );

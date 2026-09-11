@@ -4,7 +4,7 @@ import {
   validateMessageBody,
   validateSenderName,
 } from "../validation.js";
-import type { SendSmsInput } from "./types.js";
+import type { ListMessagesInput, SendSmsInput } from "./types.js";
 
 export {
   normalizePhilippineMobileNumber,
@@ -29,6 +29,115 @@ export interface ValidatedSendInput {
   readonly senderName: string | undefined;
 }
 
+export interface ValidatedListMessagesInput {
+  readonly query: Record<string, string>;
+}
+
+function validatePositiveInteger(
+  name: string,
+  value: number | undefined,
+  maximum?: number,
+): void {
+  if (
+    value !== undefined &&
+    (!Number.isSafeInteger(value) ||
+      value < 1 ||
+      (maximum !== undefined && value > maximum))
+  ) {
+    const range =
+      maximum === undefined ? "at least 1" : `between 1 and ${maximum}`;
+    throw new SemaphoreValidationError(`${name} must be an integer ${range}.`);
+  }
+}
+
+function validateDate(name: string, value: string | undefined): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new SemaphoreValidationError(`${name} must use YYYY-MM-DD format.`);
+  }
+
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== value
+  ) {
+    throw new SemaphoreValidationError(
+      `${name} must be a valid calendar date.`,
+    );
+  }
+}
+
+export function validateListMessagesInput(
+  input: ListMessagesInput | undefined,
+): ValidatedListMessagesInput {
+  if (input === undefined) {
+    return { query: {} };
+  }
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    throw new SemaphoreValidationError("list input must be an object.");
+  }
+
+  validatePositiveInteger("limit", input.limit, 1_000);
+  validatePositiveInteger("page", input.page);
+  validateDate("startDate", input.startDate);
+  validateDate("endDate", input.endDate);
+
+  if (
+    input.startDate !== undefined &&
+    input.endDate !== undefined &&
+    input.startDate > input.endDate
+  ) {
+    throw new SemaphoreValidationError("startDate cannot be after endDate.");
+  }
+
+  const query: Record<string, string> = {};
+  if (input.limit !== undefined) {
+    query.limit = String(input.limit);
+  }
+  if (input.page !== undefined) {
+    query.page = String(input.page);
+  }
+  if (input.startDate !== undefined) {
+    query.startDate = input.startDate;
+  }
+  if (input.endDate !== undefined) {
+    query.endDate = input.endDate;
+  }
+  if (input.network !== undefined) {
+    if (typeof input.network !== "string" || input.network.trim() === "") {
+      throw new SemaphoreValidationError("network must be a nonblank string.");
+    }
+    query.network = input.network.trim().toLowerCase();
+  }
+  if (input.status !== undefined) {
+    if (typeof input.status !== "string" || input.status.trim() === "") {
+      throw new SemaphoreValidationError("status must be a nonblank string.");
+    }
+    query.status = input.status.trim().toLowerCase();
+  }
+
+  return { query };
+}
+
+export function validateMessageId(messageId: string | number): string {
+  if (typeof messageId === "string" && messageId.trim() !== "") {
+    return messageId.trim();
+  }
+  if (
+    typeof messageId === "number" &&
+    Number.isSafeInteger(messageId) &&
+    messageId >= 0
+  ) {
+    return String(messageId);
+  }
+  throw new SemaphoreValidationError(
+    "messageId must be a nonblank string or a nonnegative integer.",
+  );
+}
+
 export function validateSendInput(input: SendSmsInput): ValidatedSendInput {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
     throw new SemaphoreValidationError("send input must be an object.");
@@ -44,9 +153,19 @@ export function validateSendInput(input: SendSmsInput): ValidatedSendInput {
   };
 }
 
-export function parseWireMessages(payload: unknown): WireMessage[] {
-  if (!Array.isArray(payload) || payload.length === 0) {
-    throw new TypeError("message response must be a non-empty array");
+export function parseWireMessages(
+  payload: unknown,
+  options: { readonly allowEmpty?: boolean } = {},
+): WireMessage[] {
+  if (
+    !Array.isArray(payload) ||
+    (!options.allowEmpty && payload.length === 0)
+  ) {
+    throw new TypeError(
+      options.allowEmpty
+        ? "message response must be an array"
+        : "message response must be a non-empty array",
+    );
   }
 
   return payload.map((value) => {
@@ -99,4 +218,16 @@ export function parseWireMessages(payload: unknown): WireMessage[] {
       ...(code === undefined ? {} : { code }),
     };
   });
+}
+
+export function parseWireMessage(payload: unknown): WireMessage {
+  const records = Array.isArray(payload)
+    ? parseWireMessages(payload)
+    : parseWireMessages([payload]);
+  if (records.length !== 1) {
+    throw new TypeError(
+      "single message response must contain exactly one record",
+    );
+  }
+  return records[0];
 }

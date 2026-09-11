@@ -63,3 +63,21 @@ Priority requests are still SMS submissions: the SDK does not retry them, and a
 timeout or transport failure must be treated as an uncertain outcome. Provider
 queue priority, rate limits, and credit costs are documented by
 [Semaphore](https://www.semaphore.co/docs).
+
+## Retrieving messages
+
+`client.messages.list(input, options)` sends a `GET` request to
+`/api/v4/messages`. The optional input supports `limit` (1–1,000), `page`,
+`startDate`, `endDate`, `network`, and `status` filters. Dates use `YYYY-MM-DD`
+format; network and status filters are normalized to lowercase. An empty result
+page returns `{ data: [], meta }`.
+
+`client.messages.get(messageId, options)` sends a `GET` request to
+`/api/v4/messages/{id}` and returns one normalized `SemaphoreMessage` in
+`data`. The provider may return the single record as an object or a one-item
+array; both forms are accepted. Message IDs must be nonblank strings or
+nonnegative integers.
+
+Retrieval requests do not submit SMS and are never automatically retried. The
+provider limits message retrieval to 30 requests per minute; callers should use
+the returned rate-limit metadata when polling or building dashboards.

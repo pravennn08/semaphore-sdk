@@ -14,6 +14,7 @@ export type {
   RequestOptions,
 } from "./core/request.js";
 export type {
+  ListMessagesInput,
   SendSmsInput,
   SemaphoreMessage,
   SemaphoreMessageStatus,
