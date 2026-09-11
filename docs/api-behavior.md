@@ -81,3 +81,62 @@ nonnegative integers.
 Retrieval requests do not submit SMS and are never automatically retried. The
 provider limits message retrieval to 30 requests per minute; callers should use
 the returned rate-limit metadata when polling or building dashboards.
+
+## Account reads
+
+The following methods use GET requests and the configured API key:
+
+| Method                                               | Endpoint                       | `data`                          |
+| ---------------------------------------------------- | ------------------------------ | ------------------------------- |
+| `client.account.get(options?)`                       | `/api/v4/account`              | `SemaphoreAccount`              |
+| `client.account.transactions.list(input?, options?)` | `/api/v4/account/transactions` | `SemaphoreAccountTransaction[]` |
+| `client.account.senderNames.list(input?, options?)`  | `/api/v4/account/sendernames`  | `SemaphoreSenderName[]`         |
+| `client.account.users.list(input?, options?)`        | `/api/v4/account/users`        | `SemaphoreAccountUser[]`        |
+
+Each list accepts `ListAccountItemsInput`: `page` must be a positive safe integer,
+and `limit` must be an integer from 1 through 1,000. Omitted parameters use the
+provider defaults (page 1, limit 100). Invalid input fails before dispatch. Empty
+arrays are valid pages; the SDK does not invent totals or fetch further pages.
+
+Account details expose `accountId`, `accountName`, `status`, and `creditBalance`.
+IDs become strings; finite numeric balances and decimal strings become JavaScript
+numbers. Blank, null, boolean, and nonnumeric balances are rejected rather than
+silently becoming zero. Account retrieval accepts one object or a one-item array.
+
+Sender records expose `name`, `status`, and `createdAt`. The timestamp remains a
+provider string without an assumed timezone; `createdAt` is `null` when
+`created_at` is absent or null. User records expose `userId`, `email`, `role`, and
+`status`; user `status` is `null` when absent or null. Live response shapes have
+shown both omissions. The unrecognized sender field in the diagnostic is not
+treated as a timestamp alias because its meaning has not been verified.
+Status and role strings are preserved as returned; the SDK does not assume an
+undocumented enum or infer an account user's status from missing data. Sender
+name/status and user ID/email/role remain required. Missing required fields or
+malformed values (including non-string or blank optional metadata when present)
+produce `SemaphoreApiError` with `kind: "invalid_response"`.
+
+The [provider documentation](https://www.semaphore.co/docs) repeats the account
+detail fields under transactions and does not establish a transaction record
+schema. `SemaphoreAccountTransaction` is therefore a
+`Readonly<Record<string, unknown>>`: the SDK checks for an array of objects and
+preserves their original field names and values. It does not guarantee names or
+types for transaction amounts, IDs, or timestamps. Callers must narrow fields
+against their observed provider responses. The transaction fixtures are
+synthetic shape checks, not captured or confirmed live response samples.
+
+The provider documents **2 requests per minute per account endpoint**, but the
+live sender-name and user diagnostics reported `X-RateLimit-Limit: 1` and
+`X-RateLimit-Remaining: 0`. The SDK preserves those values in `meta.rateLimit`;
+applications must use the actual headers rather than hard-coding a quota of 2.
+Construction performs no account requests. Each explicit operation makes one request, with no
+automatic polling, retries, background work, or pagination. There is no SDK-wide
+throttle across client instances: the application controls caching and request
+frequency. On HTTP 429, the SDK exposes `statusCode: 429` and `retryAfterSeconds`;
+successful responses include available rate-limit headers in `meta.rateLimit`.
+For initial live checks, run one endpoint at a time with at least 60 seconds
+between checks and respect a longer `Retry-After` if returned.
+
+All methods accept the existing timeout and cancellation options. For read errors,
+use `kind`, `statusCode`, and `retryAfterSeconds`; the shared `submission` field
+does not describe the delivery state of any earlier SMS. These methods never send
+SMS or change sender registrations or account membership.

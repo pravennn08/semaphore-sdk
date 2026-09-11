@@ -8,6 +8,17 @@ export type {
 export type { SemaphoreClientOptions } from "./config.js";
 export type { HttpTransport } from "./core/transport.js";
 export type {
+  AccountResource,
+  AccountTransactionsResource,
+  AccountSenderNamesResource,
+  AccountUsersResource,
+  ListAccountItemsInput,
+  SemaphoreAccount,
+  SemaphoreAccountTransaction,
+  SemaphoreSenderName,
+  SemaphoreAccountUser,
+} from "./resource/account/types.js";
+export type {
   ApiResponse,
   RateLimitMetadata,
   RequestMetadata,
