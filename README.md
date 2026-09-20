@@ -8,13 +8,13 @@ A TypeScript library for integrating the [Semaphore SMS API](https://semaphore.c
 into Node.js applications. It provides native `fetch`, strict types, input and
 response validation, injectable transports, and stable error classifications.
 
-[![npm version](https://img.shields.io/npm/v/semaphore-sdk?style=flat-square)](https://www.npmjs.com/package/semaphore-sdk)
-[![GitHub release](https://img.shields.io/github/v/release/pravennn08/semaphore-sdk?style=flat-square)](https://github.com/pravennn08/semaphore-sdk/releases)
+[![npm version](https://img.shields.io/npm/v/semaphore-sdk)](https://www.npmjs.com/package/semaphore-sdk)
+[![GitHub release](https://img.shields.io/github/v/release/pravennn08/semaphore-sdk)](https://github.com/pravennn08/semaphore-sdk/releases)
 [![Socket Badge](https://badge.socket.dev/npm/package/semaphore-sdk)](https://socket.dev/npm/package/semaphore-sdk)
 [![CI](https://github.com/pravennn08/semaphore-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/pravennn08/semaphore-sdk/actions/workflows/ci.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 [Installation](#installation) · [Quick Start](#quick-start) · [Supported APIs](#supported-apis) · [Configuration](#configuration) · [Errors](#errors-and-submission-safety) · [Development](#development)
 
